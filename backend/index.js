@@ -1,17 +1,45 @@
-import 'dotenv/config';
 import express from "express";
-import frameRoutes from "./frames.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import framesRouter from "./frames.js";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-app.use("/frames", frameRoutes);
+// Needed for JSON requests
+app.use(express.json());
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ===============================
+// SERVE FRONTEND
+// ===============================
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 app.get("/", (req, res) => {
-  res.send("Backend running");
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+// ===============================
+// API ROUTES
+// ===============================
+app.use("/frames", framesRouter);
+
+// ===============================
+// HEALTH CHECK (OPTIONAL)
+// ===============================
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    project: "HealthFit-Pro"
+  });
+});
+
+// ===============================
+// START SERVER
+// ===============================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });

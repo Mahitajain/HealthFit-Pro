@@ -8,7 +8,6 @@ const abi = [
   "function mint(address to, uint256 amount) public"
 ];
 
-// Initialize blockchain ONLY if all env vars are valid
 if (
   process.env.MONAD_RPC_URL &&
   process.env.PRIVATE_KEY &&
@@ -23,19 +22,17 @@ if (
       abi,
       wallet
     );
-    console.log("✅ Blockchain module initialized");
+    console.log("✅ Blockchain enabled");
   } catch (err) {
-    console.log("⚠️ Blockchain init failed, running in demo mode");
+    console.log("⚠️ Blockchain init failed, demo mode");
     contract = null;
   }
 } else {
-  console.log("ℹ️ Blockchain disabled (missing env variables)");
+  console.log("ℹ️ Blockchain disabled (demo mode)");
 }
 
 export async function mintReward(userAddress, amount) {
-  // Demo-safe fallback
   if (!contract) {
-    console.log("🟡 Mint skipped (demo mode)");
     return "DEMO_TX_HASH";
   }
 

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>HealthFit Pro - Mobile App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="data:application/manifest+json,{
+        \"name\": \"HealthFit Pro\",
+        \"short_name\": \"HealthFit\",
+        \"start_url\": \".\",
+        \"display\": \"standalone\",
+        \"background_color\": \"#4CAF50\",
+        \"theme_color\": \"#4CAF50\",
+        \"icons\": [
+            {\"src\": \"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9Ijk2IiBjeT0iOTYiIHI9Ijk2IiBmaWxsPSIjNENBRjUwIi8+Cjx0ZXh0IHg9Ijk2IiB5PSIxMDkiIGZvbnQtZmFtaWx5PSJBcHBsZVN5c3RlbSwgU2Vnb2UgVUksIFJvYm90bywgQXJpYWwiIGZvbnQtc2l6ZT0iNjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiPk88L3RleHQ+Cjwvc3ZnPgo=\", \"sizes\": \"192x192\", \"type\": \"image/svg+xml\"}
+        ]
+    }">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .glass { backdrop-filter: blur(20px); }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .page { animation: slideInUp 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-500 via-indigo-500 to-green-500 min-h-screen overflow-x-hidden">
+    <canvas id="bgCanvas" class="fixed inset-0 z-[-1] opacity-5"></canvas>
+
+    <!-- App Header -->
+    <header class="fixed top-0 left-0 right-0 bg-white/95 glass z-50 shadow-2xl p-3 flex items-center justify-between">
+        <div class="flex gap-0">
+            <button class="nav-tab active p-3 text-gray-600 hover:text-green-500 transition-all flex flex-col items-center gap-1 text-sm font-medium rounded-xl" data-page="homePage">
+                <span class="text-xl">🏠</span><span>Home</span>
+            </button>
+            <button class="nav-tab p-3 text-gray-600 hover:text-green-500 transition-all flex flex-col items-center gap-1 text-sm font-medium rounded-xl" data-page="nutritionPage">
+                <span class="text-xl">🥗</span><span>AI Coach</span>
+            </button>
+            <button class="nav-tab p-3 text-gray-600 hover:text-green-500 transition-all flex flex-col items-center gap-1 text-sm font-medium rounded-xl" data-page="storePage">
+                <span class="text-xl">🛒</span><span>Store</span>
+            </button>
+        </div>
+        
+        <div class="absolute left-1/2 -translate-x-1/2">
+            <div class="app-logo bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent font-bold text-lg flex items-center gap-2">
+                <span class="text-2xl">💪</span>HealthFit Pro
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button class="cart-btn relative bg-green-50 border-2 border-green-200 rounded-full w-11 h-11 flex items-center justify-center text-xl text-green-500 hover:scale-105 active:scale-95 transition-all" onclick="showPage('cartPage')">
+                🛒 <span class="cart-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center hidden" id="cartBadge">0</span>
+            </button>
+            <div class="wallet-display bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-full font-semibold text-sm shadow-lg flex items-center gap-1">
+                💰 <span id="walletBalance">₹100</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Pages Container -->
+    <main class="pt-20 pb-20 min-h-screen">
+        <!-- HOME PAGE -->
+        <section id="homePage" class="page active">
+            <div class="hero-card mx-4 mt-6 bg-white/95 glass rounded-3xl p-6 shadow-2xl border border-white/30">
+                <div class="welcome-user text-center mb-6" id="welcomeUser">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">👋 Welcome Back!</h1>
+                    <p class="text-gray-600 text-lg">Ready to crush your fitness goals today?</p>
+                </div>
+                <div class="quick-stats grid grid-cols-3 gap-3 mb-6">
+                    <div class="stat-card bg-gradient-to-br from-green-100 to-green-200 p-5 rounded-2xl text-center">
+                        <div class="stat-value text-3xl font-bold text-green-600 mb-1" id="dailyCalories">450</div>
+                        <div class="stat-label text-xs text-gray-600 font-medium">Calories Burned</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-green-100 to-green-200 p-5 rounded-2xl text-center">
+                        <div class="stat-value text-3xl font-bold text-green-600 mb-1" id="tasksCompleted">0</div>
+                        <div class="stat-label text-xs text-gray-600 font-medium">Tasks Done</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-green-100 to-green-200 p-5 rounded-2xl text-center">
+                        <div class="stat-value text-3xl font-bold text-green-600 mb-1" id="streakDays">5</div>
+                        <div class="stat-label text-xs text-gray-600 font-medium">Streak</div>
+                    </div>
+                </div>
+                <button class="primary-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl active:scale-95 transition-all" onclick="showPage('nutritionPage')">
+                    🚀 Start AI Coaching
+                </button>
+            </div>
+            <div class="today-tasks-preview mx-4 mt-6">
+                <h3 class="text-xl font-bold text-white mb-4">📋 Today's Top Tasks</h3>
+                <div id="previewTasks" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- NUTRITION PAGE -->
+        <section id="nutritionPage" class="page hidden">
+            <div class="onboarding-card mx-4 mt-6 bg-white/95 glass rounded-3xl p-6 shadow-2xl border border-white/30" id="onboardingCard">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">🎯 Create Your Profile</h2>
+                <form id="profileForm">
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                        <input type="text" id="userName" class="w-full p-4 border-2 border-green-100 rounded-xl text-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 bg-white/80 transition-all" placeholder="Your name" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <div><label class="block text-sm font-semibold text-gray-700 mb-2">Age</label><input type="number" id="userAge" class="w-full p-4 border-2 border-green-100 rounded-xl text-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 bg-white/80 transition-all" placeholder="25" required></div>
+                        <div><label class="block text-sm font-semibold text-gray-700 mb-2">Weight (kg)</label><input type="number" id="userWeight" class="w-full p-4 border-2 border-green-100 rounded-xl text-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 bg-white/80 transition-all" placeholder="70" required></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <div><label class="block text-sm font-semibold text-gray-700 mb-2">Height (cm)</label><input type="number" id="userHeight" class="w-full p-4 border-2 border-green-100 rounded-xl text-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 bg-white/80 transition-all" placeholder="170" required></div>
+                        <div><label class="block text-sm font-semibold text-gray-700 mb-2">Gender</label><select id="userGender" class="w-full p-4 border-2 border-green-100 rounded-xl text-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 bg-white/80 transition-all" required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Goal</label>
+                        <select id="userGoal" class="w-full p-4 border-2 border-green-100 rounded-xl text-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 bg-white/80 transition-all" required>
+                            <option value="">Select goal</option>
+                            <option value="lose">Weight Loss</option>
+                            <option value="gain">Muscle Gain</option>
+                            <option value="maintain">Maintain Weight</option>
+                        </select>
+                    </div>
+    <!-- DIET PREFERENCE -->
+<div class="mb-5">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">
+        🍽️ Diet Preference
+    </label>
+    <select id="userDiet"
+        class="w-full p-4 border-2 border-green-100 rounded-xl text-lg
+               focus:border-green-500 focus:ring-4 focus:ring-green-100
+               bg-white/80 transition-all"
+        required>
+        <option value="">Select diet</option>
+        <option value="vegetarian">Vegetarian</option>
+        <option value="non-vegetarian">Non-Vegetarian</option>
+        <option value="vegan">Vegan</option>
+        <option value="keto">Keto</option>
+        <option value="eggetarian">Eggetarian</option>
+    </select>
+</div>
+
+<!-- ALLERGIES -->
+<div class="mb-6">
+    <label class="block text-sm font-semibold text-gray-700 mb-3">
+        ⚠️ Allergies (select all that apply)
+    </label>
+
+    <div class="grid grid-cols-2 gap-3 text-sm">
+        <label class="flex items-center gap-2">
+            <input type="checkbox" value="nuts" class="allergy-checkbox">
+            Nuts
+        </label>
+        <label class="flex items-center gap-2">
+            <input type="checkbox" value="dairy" class="allergy-checkbox">
+            Dairy
+        </label>
+        <label class="flex items-center gap-2">
+            <input type="checkbox" value="gluten" class="allergy-checkbox">
+            Gluten
+        </label>
+        <label class="flex items-center gap-2">
+            <input type="checkbox" value="soy" class="allergy-checkbox">
+            Soy
+        </label>
+        <label class="flex items-center gap-2">
+            <input type="checkbox" value="eggs" class="allergy-checkbox">
+            Eggs
+        </label>
+        <label class="flex items-center gap-2">
+            <input type="checkbox" value="seafood" class="allergy-checkbox">
+            Seafood
+        </label>
+    </div>
+</div>
+
+                    <button type="submit" class="primary-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl active:scale-95 transition-all">
+                        🤖 Generate My AI Plan
+                    </button>
+                </form>
+            </div>
+            <div class="ai-plan-card mx-4 mt-6 bg-white/95 glass rounded-3xl p-6 shadow-2xl border border-white/30 hidden" id="aiPlanCard">
+                <div class="plan-header text-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-3">🤖 Your AI Plan</h2>
+                    <div class="bmi-info bg-green-100 px-4 py-2 rounded-full inline-flex gap-2 mx-auto">
+                        <span class="bmi-value text-xl font-bold text-green-600" id="bmiValue">-</span>
+                        <span class="goal-text font-semibold text-gray-700" id="goalText">-</span>
+                    </div>
+                </div>
+                <div class="diet-plan space-y-4 mb-6" id="dietPlanContent"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="primary-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl active:scale-95 transition-all" onclick="showFitnessTasks()">📋 Fitness Tasks</button>
+                    <button class="secondary-btn bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl active:scale-95 transition-all" onclick="showPage('storePage')">🛒 Get Supplements</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FITNESS TASKS -->
+        <section id="tasksPage" class="page hidden">
+            <div class="tasks-header mx-4 mt-6 p-6 bg-white/95 glass rounded-3xl shadow-2xl border border-white/30 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">📋 Today's Tasks</h2>
+                <div class="tasks-progress text-2xl font-bold text-green-600" id="tasksProgress">0/6</div>
+            </div>
+            <div id="tasksList" class="tasks-list mx-4 mb-6 space-y-3"></div>
+            <button class="back-btn mx-4 mb-6 w-full bg-gray-100 text-gray-800 py-3 px-6 rounded-2xl font-semibold hover:bg-gray-200 active:scale-95 transition-all" onclick="goBackToDiet()">← Back to Diet</button>
+        </section>
+
+        <!-- STORE PAGE -->
+        <section id="storePage" class="page hidden">
+            <div class="store-header mx-4 mt-6 p-6 bg-white/95 glass rounded-3xl shadow-2xl border border-white/30 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">🛒 Fitness Store</h2>
+                <div class="store-tabs flex gap-2 flex-wrap">
+                    <button class="tab-btn active px-4 py-2 bg-green-500 text-white rounded-xl font-semibold shadow-md active:scale-95 transition-all" data-category="all">All</button>
+                    <button class="tab-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 active:scale-95 transition-all" data-category="protein">Protein</button>
+                    <button class="tab-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 active:scale-95 transition-all" data-category="equipment">Equipment</button>
+                </div>
+            </div>
+            <div id="productsGrid" class="products-grid mx-4 space-y-3 pb-20"></div>
+        </section>
+
+        <!-- CART PAGE -->
+        <section id="cartPage" class="page hidden">
+            <div class="cart-header mx-4 mt-6 p-6 bg-white/95 glass rounded-3xl shadow-2xl border border-white/30 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">🛍️ My Cart</h2>
+                <div class="cart-total-preview text-2xl font-bold text-green-600" id="cartTotalPreview">₹0</div>
+            </div>
+            <div id="cartItems" class="cart-items mx-4 space-y-3 mb-6"></div>
+            <div id="checkoutSection" class="checkout-section mx-4 bg-white/95 glass rounded-3xl p-6 shadow-2xl border border-white/30 hidden">
+                <div class="final-total space-y-2 mb-6">
+                    <div class="flex justify-between text-lg"><span>Total:</span> <span id="finalTotal">₹0</span></div>
+                    <div class="flex justify-between text-lg"><span>Wallet (-):</span> <span id="walletDiscount">₹0</span></div>
+                    <div class="grand-total text-2xl font-bold text-green-600 border-t pt-3 mt-3">To Pay: <span id="grandTotal">₹0</span></div>
+                </div>
+                <button class="primary-btn w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl active:scale-95 transition-all danger" onclick="placeOrder()">✅ Confirm Order</button>
+            </div>
+            <button class="back-btn mx-4 mb-20 w-full bg-gray-100 text-gray-800 py-3 px-6 rounded-2xl font-semibold hover:bg-gray-200 active:scale-95 transition-all" onclick="showPage('storePage')">← Continue Shopping</button>
+        </section>
+
+        <!-- SUCCESS PAGE -->
+        <section id="successPage" class="page hidden">
+            <div class="success-screen mx-4 mt-20 p-12 bg-white/95 glass rounded-3xl shadow-2xl border border-white/30 text-center">
+                <div class="success-icon text-6xl mb-6">✅</div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Order Confirmed!</h2>
+                <p class="text-lg text-gray-600 mb-8" id="orderSummary">Your order has been placed successfully</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="primary-btn bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl active:scale-95 transition-all" onclick="showPage('homePage')">🏠 Home</button>
+                    <button class="secondary-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl active:scale-95 transition-all" onclick="showPage('storePage')">🛒 Shop More</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav fixed bottom-0 left-0 right-0 bg-white/95 glass flex p-3 shadow-2xl z-50">
+        <button class="nav-item active flex-1 p-3 rounded-xl text-gray-600 hover:text-green-500 transition-all flex flex-col items-center active:scale-95" data-page="homePage"><span class="nav-icon text-2xl">🏠</span></button>
+        <button class="nav-item flex-1 p-3 rounded-xl text-gray-600 hover:text-green-500 transition-all flex flex-col items-center active:scale-95" data-page="nutritionPage"><span class="nav-icon text-2xl">🥗</span></button>
+        <button class="nav-item flex-1 p-3 rounded-xl text-gray-600 hover:text-green-500 transition-all flex flex-col items-center active:scale-95" data-page="storePage"><span class="nav-icon text-2xl">🛒</span></button>
+        <button class="nav-item flex-1 p-3 rounded-xl text-gray-600 hover:text-green-500 transition-all flex flex-col items-center active:scale-95" data-page="cartPage"><span class="nav-icon text-2xl">🛍️</span></button>
+    </nav>
+
+    <script>
+        // COMPLETE APP FUNCTIONALITY FROM ORIGINAL paste.txt
+        
+        // App Data
+        const products = [
+            { id: 1, name: 'Whey Protein Gold 2kg', price: 2999, category: 'protein', icon: '💪' },
+            { id: 2, name: 'BCAA Energy 300g', price: 1499, category: 'protein', icon: '🔥' },
+            { id: 3, name: 'Creatine Monohydrate', price: 999, category: 'protein', icon: '⚡' },
+            { id: 4, name: 'Gym Duffle Bag', price: 1299, category: 'equipment', icon: '🎒' },
+            { id: 5, name: 'Resistance Bands Set', price: 799, category: 'equipment', icon: '🏋️' },
+            { id: 6, name: 'Premium Yoga Mat', price: 899, category: 'equipment', icon: '🧘' },
+            { id: 7, name: 'Running Shoes Pro', price: 3999, category: 'equipment', icon: '👟' },
+            { id: 8, name: 'Weightlifting Gloves', price: 599, category: 'equipment', icon: '✋' }
+        ];
+
+        const meals = {
+  breakfast: [
+    { name: "Oats with Banana", diet: ["vegetarian","vegan"], allergens: ["gluten"] },
+    { name: "Smoothie Bowl", diet: ["vegetarian","vegan"], allergens: ["nuts"] },
+    { name: "Boiled Eggs", diet: ["eggetarian","non-vegetarian"], allergens: ["eggs"] },
+    { name: "Paneer Toast", diet: ["vegetarian"], allergens: ["dairy","gluten"] }
+  ],
+  lunch: [
+    { name: "Dal + Brown Rice", diet: ["vegetarian","vegan"], allergens: [] },
+    { name: "Grilled Chicken Salad", diet: ["non-vegetarian"], allergens: [] },
+    { name: "Paneer Bowl", diet: ["vegetarian"], allergens: ["dairy"] },
+    { name: "Keto Veg Bowl", diet: ["keto","vegetarian"], allergens: [] }
+  ],
+  dinner: [
+    { name: "Veg Stir Fry", diet: ["vegetarian","vegan"], allergens: ["soy"] },
+    { name: "Grilled Fish + Veggies", diet: ["non-vegetarian"], allergens: ["seafood"] },
+    { name: "Paneer Tikka", diet: ["vegetarian"], allergens: ["dairy"] },
+    { name: "Keto Salad", diet: ["keto"], allergens: [] }
+  ],
+  snacks: [
+    { name: "Fruit Bowl", diet: ["vegetarian","vegan"], allergens: [] },
+    { name: "Protein Bar", diet: ["vegetarian"], allergens: ["nuts"] },
+    { name: "Boiled Eggs", diet: ["eggetarian","non-vegetarian"], allergens: ["eggs"] }
+  ]
+}; 
+        function getSafeMeal(mealList) {
+    const diet = userProfile.diet;
+    const allergies = userProfile.allergies || [];
+
+    const safeMeals = mealList.filter(meal =>
+        meal.diet.includes(diet) &&
+        !meal.allergens.some(a => allergies.includes(a))
+    );
+
+    if (safeMeals.length === 0) {
+        return "⚠️ No safe meal found for your preferences";
+    }
+
+    return safeMeals[Math.floor(Math.random() * safeMeals.length)].name;
+}
+
+
+
+
+        const tasks = [
+            {id:1, title:'30min Brisk Walk', reward:10, completed:false},
+            {id:2, title:'3x10 Pushups', reward:15, completed:false},
+            {id:3, title:'Drink 2L Water', reward:5, completed:false},
+            {id:4, title:'10min Yoga', reward:12, completed:false},
+            {id:5, title:'Protein Shake', reward:8, completed:false},
+            {id:6, title:'Track All Meals', reward:20, completed:false}
+        ];
+
+        // App State
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let walletBalance = parseInt(localStorage.getItem('walletBalance')) || 100;
+        let userProfile = JSON.parse(localStorage.getItem('userProfile')) || null;
+
+        // Initialize App
+        function initApp() {
+            updateUI();
+            setupEventListeners();
+            initBackground();
+            updateHomeStats();
+            
+            if (currentUser) {
+                document.getElementById('welcomeUser').innerHTML = `
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">👋 Welcome ${currentUser.name}!</h1>
+                    <p class="text-gray-600 text-lg">Ready to crush your fitness goals today?</p>
+                `;
+                if (userProfile) showDietPlan();
+            }
+        }
+
+        // Background Animation
+        function initBackground() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = Array(80).fill().map(() => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: (Math.random() - 0.5) * 0.8,
+                radius: Math.random() * 3 + 1,
+                color: `hsl(${Math.random()*60 + 120}, 70%, 60%)`
+            }));
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab, .nav-item').forEach(btn => btn.classList.remove('active', 'text-green-500'));
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            document.querySelectorAll(`[data-page="${pageId}"]`).forEach(btn => {
+                btn.classList.add('active', 'text-green-500');
+            });
+            
+            if (pageId === 'storePage') renderProducts();
+            if (pageId === 'cartPage') renderCart();
+            if (pageId === 'nutritionPage' && userProfile) showDietPlan();
+        }
+
+        function goBackToDiet() {
+        showPage('nutritionPage');
+        showDietPlan();
+        }
+
+        // Profile Form
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('profileForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+        const selectedAllergies = Array.from(
+            document.querySelectorAll('.allergy-checkbox:checked')
+                ).map(cb => cb.value);
+
+    const profile = {
+    name: document.getElementById('userName').value,
+    age: document.getElementById('userAge').value,
+    weight: document.getElementById('userWeight').value,
+    height: document.getElementById('userHeight').value,
+    gender: document.getElementById('userGender').value,
+    goal: document.getElementById('userGoal').value,
+    diet: document.getElementById('userDiet').value,
+    allergies: selectedAllergies,
+    createdAt: new Date().toISOString()
+};
+
+                
+                userProfile = profile;
+                currentUser = profile;
+                localStorage.setItem('userProfile', JSON.stringify(profile));
+                localStorage.setItem('currentUser', JSON.stringify(profile));
+                
+                document.getElementById('onboardingCard').classList.add('hidden');
+                document.getElementById('aiPlanCard').classList.remove('hidden');
+                showDietPlan();
+                updateHomeStats();
+            });
+        });
+
+        // AI Diet Plan
+        function showDietPlan() {
+    const bmi = (userProfile.weight / Math.pow(userProfile.height / 100, 2)).toFixed(1);
+    const goalText = userProfile.goal.charAt(0).toUpperCase() + userProfile.goal.slice(1);
+
+    document.getElementById('bmiValue').textContent = bmi;
+    document.getElementById('goalText').textContent = goalText + ' Goal';
+
+    document.getElementById('dietPlanContent').innerHTML = `
+        <div class="meal-plan p-4 bg-green-50 rounded-2xl">
+            <h4 class="font-bold text-lg mb-2">🥣 Breakfast</h4>
+            <p>${getSafeMeal(meals.breakfast)}</p>
+        </div>
+        <div class="meal-plan p-4 bg-green-50 rounded-2xl">
+            <h4 class="font-bold text-lg mb-2">🍲 Lunch</h4>
+            <p>${getSafeMeal(meals.lunch)}</p>
+        </div>
+        <div class="meal-plan p-4 bg-green-50 rounded-2xl">
+            <h4 class="font-bold text-lg mb-2">🍽️ Dinner</h4>
+            <p>${getSafeMeal(meals.dinner)}</p>
+        </div>
+        <div class="meal-plan p-4 bg-green-50 rounded-2xl">
+            <h4 class="font-bold text-lg mb-2">🍎 Snacks</h4>
+            <p>${getSafeMeal(meals.snacks)}</p>
+        </div>
+    `;
+}
+
+
+        // Fitness Tasks
+        function showFitnessTasks() {
+            showPage('tasksPage');
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const completed = tasks.filter(t => t.completed).length;
+            document.getElementById('tasksProgress').textContent = `${completed}/${tasks.length}`;
+            
+            document.getElementById('tasksList').innerHTML = tasks.map(task => `
+                <div class="task-item p-5 bg-white rounded-2xl shadow-lg flex justify-between items-center cursor-pointer hover:shadow-xl active:scale-95 transition-all ${task.completed ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' : ''}" onclick="toggleTask(${task.id})">
+                    <div>
+                        <div class="task-title font-semibold text-lg">${task.title}</div>
+                        <div class="task-reward text-sm ${task.completed ? 'text-green-100' : 'text-green-600'}">+₹${task.reward} cash</div>
+                    </div>
+                    ${!task.completed ? '<button class="complete-btn px-4 py-2 bg-green-500 text-white rounded-xl font-semibold text-sm">Complete</button>' : '✅ Done!'}
+                </div>
+            `).join('');
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task.completed) {
+                task.completed = true;
+                walletBalance += task.reward;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                localStorage.setItem('walletBalance', walletBalance);
+                updateUI();
+                renderTasks();
+                updateHomeStats();
+                if (navigator.vibrate) navigator.vibrate(100);
+                showToast(`+₹${task.reward} earned! 💰`);
+            }
+        }
+
+        // Products & Cart
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(product => `
+                <div class="product-card bg-white rounded-3xl p-5 shadow-lg hover:shadow-2xl active:scale-95 transition-all flex gap-4 items-center cursor-pointer" onclick="addToCart(${product.id})">
+                    <span class="product-icon text-5xl">${product.icon}</span>
+                    <div class="product-info flex-1">
+                        <h4 class="font-semibold text-lg mb-1">${product.name}</h4>
+                        <div class="product-price text-2xl font-bold text-green-600">₹${product.price}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existing = cart.find(item => item.id === productId);
+            
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({...product, quantity: 1});
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartBadge();
+            showToast('Added to cart! 🛒');
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function renderCart() {
+            const items = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                items.innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg">No items in cart</p></div>';
+                document.getElementById('checkoutSection').classList.add('hidden');
+                return;
+            }
+            
+            items.innerHTML = cart.map(item => `
+                <div class="cart-item bg-white rounded-2xl p-5 shadow-lg flex items-center gap-4">
+                    <span class="product-icon text-4xl">${item.icon}</span>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-lg">${item.name}</h4>
+                        <div class="product-price font-bold text-green-600 text-lg">₹${item.price} x ${item.quantity}</div>
+                    </div>
+                    <div class="quantity-controls flex items-center gap-3 bg-gray-100 p-2 rounded-2xl">
+                        <button class="qty-btn w-8 h-8 border-2 border-gray-300 bg-white rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-200 active:scale-95" onclick="changeQty(${item.id}, -1)">−</button>
+                        <span class="font-bold text-lg min-w-[24px] text-center">${item.quantity}</span>
+                        <button class="qty-btn w-8 h-8 border-2 border-gray-300 bg-white rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-200 active:scale-95" onclick="changeQty(${item.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discount = Math.min(subtotal, walletBalance);
+            const total = subtotal - discount;
+            
+            document.getElementById('finalTotal').textContent = `₹${subtotal}`;
+            document.getElementById('walletDiscount').textContent = `₹${discount}`;
+            document.getElementById('grandTotal').textContent = `₹${total}`;
+            document.getElementById('cartTotalPreview').textContent = `₹${subtotal}`;
+            document.getElementById('checkoutSection').classList.remove('hidden');
+        }
+
+        function changeQty(id, delta) {
+            const item = cart.find(item => item.id === id);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) {
+                    cart = cart.filter(c => c.id !== id);
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+                updateCartBadge();
+            }
+        }
+
+        function placeOrder() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discount = Math.min(subtotal, walletBalance);
+            walletBalance -= discount;
+            
+            localStorage.setItem('walletBalance', walletBalance);
+            localStorage.setItem('cart', JSON.stringify([]));
+            cart = [];
+            
+            document.getElementById('orderSummary').textContent = `Saved ₹${discount} from wallet! Order placed successfully!`;
+            showPage('successPage');
+            updateUI();
+            showToast('Order placed successfully! 🎉');
+        }
+
+        // Utilities
+        function updateUI() {
+            document.getElementById('walletBalance').textContent = `₹${walletBalance}`;
+            updateCartBadge();
+        }
+
+        function updateCartBadge() {
+            const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badge = document.getElementById('cartBadge');
+            badge.textContent = total;
+            badge.classList.toggle('hidden', total === 0);
+        }
+
+        function updateHomeStats() {
+            document.getElementById('dailyCalories').textContent = '450';
+            document.getElementById('tasksCompleted').textContent = tasks.filter(t => t.completed).length;
+            document.getElementById('streakDays').textContent = '5';
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-24 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-2xl font-semibold shadow-2xl z-[1000]';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.nav-item, .nav-tab').forEach(btn => {
+                btn.addEventListener('click', () => showPage(btn.dataset.page));
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-green-500', 'text-white'));
+                    e.target.classList.add('active', 'bg-green-500', 'text-white');
+                    renderProducts(); // Add filtering logic here if needed
+                });
+            });
+        }
+
+        // Initialize
+        initApp();
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('bgCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
